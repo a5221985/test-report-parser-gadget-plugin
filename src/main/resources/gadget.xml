@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module>
+	<ModulePrefs title="Test Automation Report" directory_title="Test Automation Report"
+		description="Test Automation Report" author="AM">
+		<Optional feature="gadget-directory">
+			<Param name="categories">
+				JIRA
+			</Param>
+		</Optional>
+		<Require feature="setprefs" />
+		<Require feature="dynamic-height" />
+		<Require feature="views" />
+		<Require feature="oauthpopup" />
+		#oauth
+		#supportedLocales("gadget.common,gadget,i18n")
+	</ModulePrefs>
+	<UserPref name="file_server" display_name="File Server URL:" default_value="http://localhost:2000"/>
+	<UserPref name="test_report_path" display_name="Test Automation Report Path (xsl):" default_value="C:/Users/brahmaji.mutthoju/Downloads/TestReport.xls"/>
+	<UserPref name="setting1" datatype="hidden" default_value="" />
+	<UserPref name="setting2" datatype="hidden" default_value="" />
+	<UserPref name="isConfigured" datatype="hidden" default_value="false" />
+	<UserPref name="refresh" datatype="hidden" default_value="false" />
+	<Content type="html" view="profile,canvas,home"><![CDATA[
+		#requireResource("com.atlassian.jira.gadgets:g-filter-results")
+		#requireResource("atlassian-plugin.key:${atlassian.plugin.key}")
+		#includeResources()
+		<style type="text/css">
+			details {
+                border-radius: 3px;
+                background: #EEE;
+            }
+
+            details summary {
+                font-size: 17px;
+                vertical-align: top;
+                background: #333;
+                color: #FFF;
+                border-radius: 3px;
+                padding: 5px 10px;
+                outline: none;
+            }
+
+            details[open] summary {
+                background: #69c773;
+                color: #333;
+            }
+
+            /* Hide the default marker. */    
+            details summary::-webkit-details-marker {
+                display: none;
+            }
+
+            /* Add the custom marker in the default state. */    
+            details summary:before {
+                display: inline-block;
+                width: 18px;
+                height: 18px;
+                margin-right: 8px;
+                content: "";
+                background-image: url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/4621/treehouse-icon-sprite.png);
+                background-repeat: no-repeat;
+                background-position: 0 0;
+            }
+
+            /* Move the sprite image when the details box is open. */
+            details[open] summary:before {
+                background-position: -18px 0;
+            }
+            
+            .bold-green-font {
+                font-weight: bold;
+                color: green;
+            }
+            .bold-font {
+                font-weight: bold;
+            }
+            .right-text {
+                text-align: right;
+            }
+            .large-font {
+                font-size: 15px;
+            }
+            .italic-darkblue-font {
+                font-style: italic;
+                color: darkblue;
+            }
+            .darkblue-font {
+                color: darkblue;
+            }
+            .italic-purple-font {
+                font-style: italic;
+                color: purple;
+            }
+            .underline-blue-font {
+                text-decoration: underline;
+                color: blue;
+            }
+            .blue-font {
+                color: blue;
+            }
+            .red-font {
+                color: red;
+            }
+            .green-font {
+                color: green;
+            }
+            .orange-background {
+                background-color: orange;
+            }
+            .orchid-background {
+                background-color: orchid;
+            }
+            .beige-background {
+                background-color: beige;
+            }
+            .full-width {
+            	width: 100px
+            }
+        </style>
+		
+		<script type="text/javascript">
+			window.onload = function(){
+				var edit = window.parent.document.getElementById(window.frameElement.id +     '-edit');
+				edit.classList.remove('hidden');
+				edit.style.display = 'none';
+			}
+		</script>
+	
+		<script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/xls/0.7.4-a/xls.js"></script>
+		<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+		<script type="text/javascript">
+			var cssClassNamesSuccess = {
+                                    'headerRow': 'darkblue-font serif large-font bold-font',
+                                    'tableRow': 'green-font serif',
+                                    'oddTableRow': 'beige-background green-font serif',
+                                    'selectedTableRow': 'orange-background serif large-font',
+                                    'hoverTableRow': '',
+                                    'headerCell': 'gold-border',
+                                    'tableCell': '',
+                                    'rowNumberCell': 'serif blue-font'
+                                };
+                                
+           	var cssClassNamesFailed = {
+                                    'headerRow': 'darkblue-font serif large-font bold-font',
+                                    'tableRow': 'red-font serif',
+                                    'oddTableRow': 'beige-background red-font serif',
+                                    'selectedTableRow': 'orange-background serif large-font',
+                                    'hoverTableRow': '',
+                                    'headerCell': 'gold-border',
+                                    'tableCell': '',
+                                    'rowNumberCell': 'serif blue-font'
+                                };
+		
+			var oFileIn;
+			var dataArraySuccess = [];
+			var dataArrayFailed = [];
+			var successRowCount = 0;
+			var failedRowCount = 0;
+			
+			var server = "__UP_file_server__";
+			var test_report_path = "__UP_test_report_path__";
+			
+			console.log("SERVER URL: " + server);
+			console.log("REPORT PATH: " + test_report_path);
+			
+			// var request = JSON.stringify(server + '?filepath=' + test_report_path);
+			var request = 'http://10.78.38.83:9090/?filepath=C:/OneClickInstallation/Automated_TC/Intuition%20Service%20Framework_Reports/TestReport.xls';
+			// var request = 'http://localhost:2000/?filepath=C:/Users/Brahmaji.Mutthoju/Documents/TestReport.xls';
+			console.log("REQUEST URL: " + request);
+			
+			$.ajax({
+				url: request,
+				dataType: 'jsonp',
+				type: 'GET',
+				crossDomain: true,
+				success: function(response) {
+				    parseWorkbookJSON(response);
+				},
+				error: function(error) {
+					console.log(JSON.stringify(error));
+				},
+				jsonp: 'callback',
+				jsonpCallback: 'myJsonMethod'
+           });
+			
+			google.charts.load('current', {'packages':['table']});
+			google.charts.setOnLoadCallback(drawSuccessTable);
+			google.charts.setOnLoadCallback(drawFailedTable);
+			var optionsSuccess = {'showRowNumber': true, 'allowHtml': true, 'cssClassNames': cssClassNamesSuccess, 'width': '100%', 'pageSize': 9, 'page': 'enable'};
+			var optionsFailed = {'showRowNumber': true, 'allowHtml': true, 'cssClassNames': cssClassNamesFailed, 'width': '100%', 'pageSize': 9, 'page': 'enable'};
+	
+			function drawSuccessTable() {
+				console.log('DATA ARRAY: ' + JSON.stringify(dataArraySuccess));
+				console.log('TABLE ID: ' + JSON.stringify('table_div_success'));
+				var data = new google.visualization.DataTable();
+				data.addColumn('string', 'Script Name');
+				// data.addColumn('boolean', 'Result');
+				data.addRows(dataArraySuccess);
+	
+				var table = new google.visualization.Table(document.getElementById('table_div_success'));
+				table.draw(data, optionsSuccess);
+			}
+			
+			function drawFailedTable() {
+				console.log('DATA ARRAY: ' + JSON.stringify(dataArrayFailed));
+				console.log('TABLE ID: ' + JSON.stringify('table_div_failed'));
+				var data = new google.visualization.DataTable();
+				data.addColumn('string', 'Script Name');
+				// data.addColumn('boolean', 'Result');
+				data.addRows(dataArrayFailed);
+	
+				var table = new google.visualization.Table(document.getElementById('table_div_failed'));
+				table.draw(data, optionsFailed);
+			}
+	
+			function parseWorkbookJSON(workbook) {
+				var sheet_name_list = workbook.SheetNames;
+		        sheet_name_list.forEach(function (y) { /* iterate through sheets */
+		            var worksheet = workbook.Sheets[y];
+		            var keys = Object.keys(worksheet);
+		            
+		            if(worksheet[keys[4]].v.toUpperCase() == 'FAIL') {
+		            	var row = [worksheet[keys[3]].v];
+		            	// row.push(false);
+		            	dataArrayFailed.push(row);
+		            	failedRowCount++;
+		            } else {
+		            	var row = [worksheet[keys[3]].v];
+		            	// row.push(true);
+		            	dataArraySuccess.push(row);
+		            	successRowCount++;
+		            }
+		            
+		        });
+		        
+		        console.log('dataArraySuccess.length: ' + dataArraySuccess.length);
+		        console.log('dataArrayFailed.length: ' + dataArrayFailed.length);
+		        
+		        var summaryElements = document.getElementsByName('test_summary');
+		        
+		        console.log('SUMMARY ELEMENTS: ' + JSON.stringify(summaryElements));
+		        summaryElements[0].innerHTML = successRowCount;
+		        summaryElements[1].innerHTML = failedRowCount;						        
+
+		        if(dataArraySuccess.length != 0) {	
+		        	dataArray = dataArraySuccess;
+		        	tableId = 'table_div_success';
+					drawSuccessTable();
+				}
+
+				if(dataArrayFailed.length != 0) {
+					dataArray = dataArrayFailed;
+		        	tableId = 'table_div_failed';
+					drawFailedTable();
+				}
+			}
+		</script>
+		<details>
+			<summary>Tests Succeeded <span align="right" name="test_summary"></span></summary>
+			<div id="table_div_success"></div>
+		</details>
+		<details open>
+			<summary>Tests Failed <span align="right" name="test_summary"></span></summary>
+			<div id="table_div_failed"></div>
+		</details>
+	]]></Content>
+</Module>

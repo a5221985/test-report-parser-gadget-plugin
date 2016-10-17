@@ -1,0 +1,33 @@
+<atlassian-plugin key="${atlassian.plugin.key}" name="${project.name}" plugins-version="2">
+    <plugin-info>
+        <description>${project.description}</description>
+        <version>${project.version}</version>
+        <vendor name="${project.organization.name}" url="${project.organization.url}" />
+        <param name="plugin-icon">images/pluginIcon.png</param>
+        <param name="plugin-logo">images/pluginLogo.png</param>
+    </plugin-info>
+
+    <!-- add our i18n resource -->
+    <!-- <resource type="i18n" name="i18n" location="test-report-parser-gadget-plugin"/> -->
+    
+	<resource type="i18n" name="test_report_i18n" location="i18n/test_report.i18n" />
+
+    <!-- add our web resources -->
+    <web-resource key="test-report-parser-gadget-plugin-resources" name="test-report-parser-gadget-plugin Web Resources">
+        <dependency>com.atlassian.auiplugin:ajs</dependency>
+        
+        <resource type="download" name="test-report-parser-gadget-plugin.css" location="/css/test-report-parser-gadget-plugin.css"/>
+        <resource type="download" name="test-report-parser-gadget-plugin.js" location="/js/test-report-parser-gadget-plugin.js"/>
+        <resource type="download" name="images/" location="/images"/>
+
+        <context>test-report-parser-gadget-plugin</context>
+    </web-resource>
+    
+	<gadget location="gadget.xml" key="tutorial-gadget" name="JIRA Tutorial Gadget" />
+
+	<rest key="tutorial-gadget-rest-resources" path="/tutorial-gadget"
+		version="1.0">
+		<description>Provides the REST resource for the project list.
+		</description>
+	</rest>
+</atlassian-plugin>
